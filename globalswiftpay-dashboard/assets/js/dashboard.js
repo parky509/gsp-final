@@ -405,10 +405,14 @@
         Forms.init();
         Clipboard.init();
         
-        // Auto-refresh balance every 30 seconds
+        Forms.refreshBalance();
+        Forms.refreshTransactions();
+
+        // Auto-refresh balance and transactions every 5 seconds
         setInterval(function() {
             Forms.refreshBalance();
-        }, 30000);
+            Forms.refreshTransactions();
+        }, 5000);
     });
 
 })(jQuery);
