@@ -1,0 +1,558 @@
+/**
+ * GlobalSwiftPay Dashboard - Main Styles
+ * Crystal blue theme with glass morphism effects
+ */
+
+/* CSS Variables */
+:root {
+    --gsp-primary: #0096ff;
+    --gsp-primary-dark: #0077cc;
+    --gsp-primary-light: #00d4ff;
+    --gsp-secondary: #1a1a2e;
+    --gsp-accent: #16213e;
+    --gsp-success: #00c853;
+    --gsp-warning: #ffc107;
+    --gsp-danger: #ff5252;
+    --gsp-text-primary: #1a1a2e;
+    --gsp-text-secondary: #4a5568;
+    --gsp-text-light: #718096;
+    --gsp-background: #f0f5ff;
+    --gsp-white: #ffffff;
+    --gsp-glass-bg: rgba(255, 255, 255, 0.25);
+    --gsp-glass-border: rgba(255, 255, 255, 0.18);
+    --gsp-shadow: 0 8px 32px rgba(0, 150, 255, 0.15);
+    --gsp-shadow-hover: 0 12px 40px rgba(0, 150, 255, 0.25);
+    --gsp-border-radius: 20px;
+    --gsp-border-radius-sm: 12px;
+    --gsp-transition: all 0.3s ease;
+}
+
+/* Reset and Base */
+.gsp-dashboard {
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #e8f4ff 0%, #f0f5ff 50%, #e0f0ff 100%);
+    min-height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.gsp-dashboard *,
+.gsp-dashboard *::before,
+.gsp-dashboard *::after {
+    box-sizing: border-box;
+}
+
+/* Glass morphism card effect */
+.gsp-glass-card {
+    background: var(--gsp-glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--gsp-border-radius);
+    border: 1px solid var(--gsp-glass-border);
+    box-shadow: var(--gsp-shadow);
+    transition: var(--gsp-transition);
+}
+
+.gsp-glass-card:hover {
+    box-shadow: var(--gsp-shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Header Section */
+.gsp-header {
+    background: linear-gradient(135deg, var(--gsp-primary) 0%, var(--gsp-primary-light) 100%);
+    border-radius: var(--gsp-border-radius);
+    padding: 30px 40px;
+    margin-bottom: 30px;
+    box-shadow: var(--gsp-shadow);
+}
+
+.gsp-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.gsp-user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.gsp-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.gsp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gsp-user-details h2 {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 5px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.gsp-user-details h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gsp-white);
+    margin: 0;
+}
+
+.gsp-btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--gsp-white);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--gsp-transition);
+}
+
+.gsp-btn-logout:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    color: var(--gsp-white);
+}
+
+.gsp-icon {
+    font-size: 18px;
+}
+
+/* SVG icon styling */
+.gsp-card-icon svg {
+    width: 32px;
+    height: 32px;
+    color: var(--gsp-white);
+}
+
+.gsp-btn-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--gsp-primary);
+    transition: var(--gsp-transition);
+}
+
+.gsp-glass-btn:hover .gsp-btn-icon {
+    color: var(--gsp-white);
+}
+
+.gsp-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.gsp-copy-icon {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    opacity: 0.6;
+}
+
+.gsp-file-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Balance Section */
+.gsp-balance-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.gsp-balance-card {
+    background: var(--gsp-white);
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: default;
+}
+
+.gsp-card-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.gsp-wallet-balance .gsp-card-icon {
+    background: linear-gradient(135deg, #0096ff 0%, #00d4ff 100%);
+}
+
+.gsp-savings-balance .gsp-card-icon {
+    background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+}
+
+.gsp-card-content h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gsp-text-light);
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gsp-amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gsp-text-primary);
+    margin: 0;
+}
+
+/* Section Title */
+.gsp-section-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gsp-text-primary);
+    margin: 0 0 25px 0;
+    padding-left: 15px;
+    border-left: 4px solid var(--gsp-primary);
+}
+
+/* Actions Section */
+.gsp-actions-section {
+    margin-bottom: 40px;
+}
+
+.gsp-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+}
+
+.gsp-glass-btn {
+    background: var(--gsp-white);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--gsp-glass-border);
+    border-radius: var(--gsp-border-radius-sm);
+    padding: 25px 15px;
+    cursor: pointer;
+    transition: var(--gsp-transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.08);
+}
+
+.gsp-glass-btn:hover {
+    background: linear-gradient(135deg, var(--gsp-primary) 0%, var(--gsp-primary-light) 100%);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 150, 255, 0.25);
+}
+
+.gsp-glass-btn:hover .gsp-btn-text {
+    color: var(--gsp-white);
+}
+
+.gsp-btn-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.gsp-btn-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gsp-text-primary);
+    text-align: center;
+    transition: var(--gsp-transition);
+}
+
+/* Transactions Section */
+.gsp-transactions-section {
+    margin-bottom: 30px;
+}
+
+.gsp-transactions-card {
+    background: var(--gsp-white);
+    padding: 25px;
+    overflow: hidden;
+}
+
+.gsp-transactions-table-wrapper {
+    overflow-x: auto;
+}
+
+.gsp-transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+}
+
+.gsp-transactions-table th,
+.gsp-transactions-table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 150, 255, 0.1);
+}
+
+.gsp-transactions-table th {
+    background: rgba(0, 150, 255, 0.05);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gsp-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gsp-transactions-table tr:hover td {
+    background: rgba(0, 150, 255, 0.02);
+}
+
+.gsp-transaction-type {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.gsp-type-deposit,
+.gsp-type-transfer-in {
+    background: rgba(0, 200, 83, 0.1);
+    color: #00c853;
+}
+
+.gsp-type-withdrawal,
+.gsp-type-transfer-out {
+    background: rgba(255, 82, 82, 0.1);
+    color: #ff5252;
+}
+
+.gsp-type-conversion-btc,
+.gsp-type-conversion-usdt,
+.gsp-type-conversion-bank {
+    background: rgba(0, 150, 255, 0.1);
+    color: var(--gsp-primary);
+}
+
+.gsp-transaction-amount {
+    font-weight: 600;
+    color: var(--gsp-text-primary);
+}
+
+.gsp-status {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.gsp-status-pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #e6a000;
+}
+
+.gsp-status-approved {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+}
+
+.gsp-status-declined {
+    background: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+}
+
+.gsp-transaction-date {
+    font-size: 13px;
+    color: var(--gsp-text-light);
+}
+
+.gsp-no-transactions {
+    text-align: center;
+    padding: 40px 20px !important;
+    color: var(--gsp-text-light);
+    font-style: italic;
+}
+
+/* Login Required */
+.gsp-login-required {
+    text-align: center;
+    padding: 60px 30px;
+    background: var(--gsp-white);
+    border-radius: var(--gsp-border-radius);
+    box-shadow: var(--gsp-shadow);
+    max-width: 400px;
+    margin: 50px auto;
+}
+
+.gsp-login-required p {
+    font-size: 18px;
+    color: var(--gsp-text-secondary);
+    margin-bottom: 25px;
+}
+
+.gsp-btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gsp-primary) 0%, var(--gsp-primary-light) 100%);
+    color: var(--gsp-white);
+    padding: 14px 35px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: var(--gsp-transition);
+    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
+}
+
+.gsp-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 150, 255, 0.4);
+}
+
+/* Toast Notification */
+.gsp-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10001;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.gsp-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.gsp-toast.success {
+    background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+    color: var(--gsp-white);
+}
+
+.gsp-toast.error {
+    background: linear-gradient(135deg, #ff5252 0%, #ff8a80 100%);
+    color: var(--gsp-white);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .gsp-dashboard {
+        padding: 15px;
+    }
+    
+    .gsp-header {
+        padding: 20px;
+    }
+    
+    .gsp-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .gsp-user-info {
+        flex-direction: column;
+    }
+    
+    .gsp-user-details h1 {
+        font-size: 22px;
+    }
+    
+    .gsp-avatar {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .gsp-balance-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .gsp-balance-card {
+        padding: 20px;
+    }
+    
+    .gsp-amount {
+        font-size: 26px;
+    }
+    
+    .gsp-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .gsp-glass-btn {
+        padding: 18px 10px;
+    }
+    
+    .gsp-btn-icon {
+        font-size: 26px;
+    }
+    
+    .gsp-btn-text {
+        font-size: 11px;
+    }
+    
+    .gsp-transactions-card {
+        padding: 15px;
+    }
+    
+    .gsp-transactions-table th,
+    .gsp-transactions-table td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gsp-dashboard {
+        padding: 10px;
+    }
+    
+    .gsp-header {
+        padding: 15px;
+        border-radius: 15px;
+    }
+    
+    .gsp-user-details h2 {
+        font-size: 12px;
+    }
+    
+    .gsp-user-details h1 {
+        font-size: 18px;
+    }
+    
+    .gsp-section-title {
+        font-size: 18px;
+    }
+    
+    .gsp-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
