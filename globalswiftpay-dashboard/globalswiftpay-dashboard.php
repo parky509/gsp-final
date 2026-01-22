@@ -3,7 +3,7 @@
  * Plugin Name: GlobalSwiftPay Dashboard
  * Plugin URI: https://globalswiftpay2.com
  * Description: A professional investment dashboard plugin with glass morphism design for GlobalSwiftPay
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: GlobalSwiftPay
  * Author URI: https://globalswiftpay2.com
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('GSP_VERSION', '1.0.0');
+define('GSP_VERSION', '1.0.1');
 define('GSP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GSP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GSP_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -38,6 +38,7 @@ require_once GSP_PLUGIN_DIR . 'public/class-gsp-public.php';
 class GlobalSwiftPay_Dashboard {
     
     private static $instance = null;
+    private static $asset_versions = array();
     
     public static function get_instance() {
         if (null === self::$instance) {
@@ -97,15 +98,37 @@ class GlobalSwiftPay_Dashboard {
         // Load text domain
         load_plugin_textdomain('globalswiftpay-dashboard', false, dirname(GSP_PLUGIN_BASENAME) . '/languages');
     }
+
+    private function get_asset_version($relative_path) {
+        if (isset(self::$asset_versions[$relative_path])) {
+            return self::$asset_versions[$relative_path];
+        }
+
+        $file_path = GSP_PLUGIN_DIR . wp_normalize_path($relative_path);
+        $version = file_exists($file_path) ? filemtime($file_path) : false;
+        if ($version === false) {
+            $version = GSP_VERSION;
+        }
+        self::$asset_versions[$relative_path] = $version;
+
+        return $version;
+    }
     
     public function enqueue_public_assets() {
-        if (is_page('gsp-dashboard') || has_shortcode(get_post()->post_content ?? '', 'gsp_dashboard')) {
+        $post = get_post();
+        $post_content = $post ? $post->post_content : '';
+
+        if (is_page('gsp-dashboard') || has_shortcode($post_content, 'gsp_dashboard')) {
+            $style_version = $this->get_asset_version('assets/css/dashboard.css');
+            $forms_version = $this->get_asset_version('assets/css/forms.css');
+            $script_version = $this->get_asset_version('assets/js/dashboard.js');
+
             // Enqueue styles
-            wp_enqueue_style('gsp-dashboard-style', GSP_PLUGIN_URL . 'assets/css/dashboard.css', array(), GSP_VERSION);
-            wp_enqueue_style('gsp-forms-style', GSP_PLUGIN_URL . 'assets/css/forms.css', array(), GSP_VERSION);
+            wp_enqueue_style('gsp-dashboard-style', GSP_PLUGIN_URL . 'assets/css/dashboard.css', array(), $style_version);
+            wp_enqueue_style('gsp-forms-style', GSP_PLUGIN_URL . 'assets/css/forms.css', array(), $forms_version);
             
             // Enqueue scripts
-            wp_enqueue_script('gsp-dashboard-script', GSP_PLUGIN_URL . 'assets/js/dashboard.js', array('jquery'), GSP_VERSION, true);
+            wp_enqueue_script('gsp-dashboard-script', GSP_PLUGIN_URL . 'assets/js/dashboard.js', array('jquery'), $script_version, true);
             
             // Localize script
             wp_localize_script('gsp-dashboard-script', 'gsp_ajax', array(
@@ -118,8 +141,11 @@ class GlobalSwiftPay_Dashboard {
     
     public function enqueue_admin_assets($hook) {
         if (strpos($hook, 'globalswiftpay') !== false) {
-            wp_enqueue_style('gsp-admin-style', GSP_PLUGIN_URL . 'assets/css/admin.css', array(), GSP_VERSION);
-            wp_enqueue_script('gsp-admin-script', GSP_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), GSP_VERSION, true);
+            $admin_style_version = $this->get_asset_version('assets/css/admin.css');
+            $admin_script_version = $this->get_asset_version('assets/js/admin.js');
+
+            wp_enqueue_style('gsp-admin-style', GSP_PLUGIN_URL . 'assets/css/admin.css', array(), $admin_style_version);
+            wp_enqueue_script('gsp-admin-script', GSP_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), $admin_script_version, true);
             
             wp_localize_script('gsp-admin-script', 'gsp_admin_ajax', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
