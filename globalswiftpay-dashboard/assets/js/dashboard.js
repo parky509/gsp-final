@@ -62,6 +62,8 @@
 
     // Form handlers
     const Forms = {
+        balanceRequest: null,
+        transactionsRequest: null,
         init: function() {
             // Deposit form
             $('#gsp-deposit-form').on('submit', function(e) {
@@ -308,7 +310,11 @@
         },
         
         refreshTransactions: function() {
-            $.ajax({
+            if (Forms.transactionsRequest) {
+                return;
+            }
+
+            Forms.transactionsRequest = $.ajax({
                 url: gsp_ajax.ajax_url,
                 type: 'POST',
                 data: {
@@ -319,12 +325,19 @@
                     if (response.success && response.data.transactions) {
                         Forms.updateTransactionsTable(response.data.transactions);
                     }
+                },
+                complete: function() {
+                    Forms.transactionsRequest = null;
                 }
             });
         },
         
         refreshBalance: function() {
-            $.ajax({
+            if (Forms.balanceRequest) {
+                return;
+            }
+
+            Forms.balanceRequest = $.ajax({
                 url: gsp_ajax.ajax_url,
                 type: 'POST',
                 data: {
@@ -336,6 +349,9 @@
                         $('#gsp-wallet-balance').text('$' + response.data.wallet_balance);
                         $('#gsp-savings-balance').text('$' + response.data.savings_balance);
                     }
+                },
+                complete: function() {
+                    Forms.balanceRequest = null;
                 }
             });
         },
@@ -409,10 +425,14 @@
         Forms.refreshTransactions();
 
         // Auto-refresh balance and transactions every 5 seconds
-        setInterval(function() {
+        const refreshInterval = setInterval(function() {
             Forms.refreshBalance();
             Forms.refreshTransactions();
         }, 5000);
+
+        $(window).on('beforeunload', function() {
+            clearInterval(refreshInterval);
+        });
     });
 
 })(jQuery);
