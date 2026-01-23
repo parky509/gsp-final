@@ -1,0 +1,518 @@
+/**
+ * GlobalSwiftPay Dashboard - Admin Styles
+ * Sleek and responsive admin interface
+ */
+
+/* Admin Dashboard Wrapper */
+.gsp-admin-wrap {
+    margin: 20px 20px 20px 0;
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.gsp-admin-wrap h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 30px;
+}
+
+/* Admin Dashboard Cards */
+.gsp-admin-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.gsp-admin-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.gsp-admin-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.gsp-admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 150, 255, 0.15);
+}
+
+.gsp-admin-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gsp-admin-card-icon .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+}
+
+.gsp-admin-card-icon.deposits {
+    background: linear-gradient(135deg, #0096ff 0%, #00d4ff 100%);
+}
+
+.gsp-admin-card-icon.withdrawals {
+    background: linear-gradient(135deg, #ff5252 0%, #ff8a80 100%);
+}
+
+.gsp-admin-card-icon.transfers {
+    background: linear-gradient(135deg, #7c4dff 0%, #b388ff 100%);
+}
+
+.gsp-admin-card-icon.conversions {
+    background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+}
+
+.gsp-admin-card-content h3 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.gsp-admin-card-content p {
+    font-size: 14px;
+    color: #718096;
+    margin: 5px 0 0 0;
+}
+
+.gsp-admin-card-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0096ff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.gsp-admin-card-link:hover {
+    color: #0077cc;
+}
+
+/* Quick Actions */
+.gsp-admin-quick-actions h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 20px;
+}
+
+.gsp-admin-actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.gsp-admin-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #0096ff 0%, #00d4ff 100%);
+    color: #ffffff;
+    padding: 14px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
+}
+
+.gsp-admin-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 150, 255, 0.4);
+    color: #ffffff;
+}
+
+.gsp-admin-action-btn .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Admin Tables */
+.gsp-admin-table-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.gsp-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gsp-admin-table th {
+    background: #f8fafc;
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.gsp-admin-table td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #1a1a2e;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.gsp-admin-table tr:hover td {
+    background: #f8fafc;
+}
+
+.gsp-admin-table small {
+    display: block;
+    font-size: 12px;
+    color: #718096;
+    margin-top: 3px;
+}
+
+.gsp-admin-no-data {
+    text-align: center;
+    padding: 40px 20px !important;
+    color: #718096;
+    font-style: italic;
+}
+
+/* Status Badges */
+.gsp-status {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.gsp-status-pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #e6a000;
+}
+
+.gsp-status-approved {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+}
+
+.gsp-status-declined {
+    background: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+}
+
+/* Conversion Type Badges */
+.gsp-conversion-type {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.gsp-type-btc {
+    background: #f7931a;
+    color: #ffffff;
+}
+
+.gsp-type-usdt {
+    background: #26a17b;
+    color: #ffffff;
+}
+
+.gsp-type-bank {
+    background: #0096ff;
+    color: #ffffff;
+}
+
+/* Admin Buttons */
+.gsp-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+}
+
+.gsp-admin-btn:last-child {
+    margin-right: 0;
+}
+
+.gsp-btn-approve {
+    background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+    color: #ffffff;
+}
+
+.gsp-btn-approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
+}
+
+.gsp-btn-decline {
+    background: linear-gradient(135deg, #ff5252 0%, #ff8a80 100%);
+    color: #ffffff;
+}
+
+.gsp-btn-decline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4);
+}
+
+.gsp-btn-edit-balance {
+    background: linear-gradient(135deg, #0096ff 0%, #00d4ff 100%);
+    color: #ffffff;
+}
+
+.gsp-btn-edit-balance:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.4);
+}
+
+.gsp-btn-save {
+    background: linear-gradient(135deg, #0096ff 0%, #00d4ff 100%);
+    color: #ffffff;
+    padding: 12px 30px;
+    font-size: 14px;
+}
+
+.gsp-btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.4);
+}
+
+.gsp-action-completed {
+    font-size: 12px;
+    color: #718096;
+    font-style: italic;
+}
+
+.gsp-view-receipt,
+.gsp-view-details-btn {
+    font-size: 12px;
+    color: #0096ff;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.gsp-view-receipt:hover,
+.gsp-view-details-btn:hover {
+    color: #0077cc;
+    text-decoration: underline;
+}
+
+.gsp-no-receipt {
+    color: #a0aec0;
+    font-size: 12px;
+}
+
+/* Admin Settings */
+.gsp-admin-settings {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+}
+
+.gsp-settings-form {
+    max-width: 600px;
+}
+
+.gsp-settings-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.gsp-settings-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.gsp-settings-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 8px 0;
+}
+
+.gsp-settings-description {
+    font-size: 13px;
+    color: #718096;
+    margin: 0 0 20px 0;
+}
+
+.gsp-form-group {
+    margin-bottom: 20px;
+}
+
+.gsp-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 8px;
+}
+
+.gsp-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.gsp-input:focus {
+    border-color: #0096ff;
+    box-shadow: 0 0 0 4px rgba(0, 150, 255, 0.1);
+}
+
+/* Admin Modal */
+.gsp-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+}
+
+.gsp-modal.active {
+    display: flex;
+}
+
+.gsp-modal-content {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.gsp-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.gsp-modal-close:hover {
+    background: #ff5252;
+    color: #ffffff;
+}
+
+.gsp-modal-content h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 25px 0;
+    padding-right: 30px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .gsp-admin-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 782px) {
+    .gsp-admin-wrap {
+        margin: 10px;
+    }
+    
+    .gsp-admin-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .gsp-admin-table-container {
+        overflow-x: auto;
+    }
+    
+    .gsp-admin-table {
+        min-width: 800px;
+    }
+    
+    .gsp-admin-settings {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gsp-admin-wrap h1 {
+        font-size: 22px;
+    }
+    
+    .gsp-admin-card {
+        padding: 20px;
+    }
+    
+    .gsp-admin-card-content h3 {
+        font-size: 28px;
+    }
+    
+    .gsp-admin-action-btn {
+        padding: 12px 18px;
+        font-size: 13px;
+    }
+}
