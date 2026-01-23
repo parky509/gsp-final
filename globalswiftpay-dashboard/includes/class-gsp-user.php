@@ -8,34 +8,86 @@ if (!defined('ABSPATH')) {
 }
 
 class GSP_User {
+    private static $balances_table_checked = false;
+    private const BALANCE_EPSILON = 0.01;
     
     /**
      * Get user balance
      */
     public static function get_balance($user_id) {
         global $wpdb;
-        $table = $wpdb->prefix . 'gsp_user_balances';
-        
+        $table_name = $wpdb->prefix . 'gsp_user_balances';
+
+        if (!self::$balances_table_checked) {
+            $table_exists = $wpdb->get_var($wpdb->prepare(
+                'SHOW TABLES LIKE %s',
+                $wpdb->esc_like($table_name)
+            ));
+            if (!$table_exists) {
+                GSP_Database::create_tables();
+            }
+            self::$balances_table_checked = true;
+        }
+
         $balance = $wpdb->get_row($wpdb->prepare(
-            "SELECT wallet_balance, savings_balance FROM $table WHERE user_id = %d",
+            "SELECT wallet_balance, savings_balance, created_at, updated_at FROM {$table_name} WHERE user_id = %d",
             $user_id
         ));
         
         if (!$balance) {
+            $wallet_balance = self::calculate_wallet_balance_from_transactions($user_id);
             // Create initial balance record
-            $wpdb->insert($table, array(
+            $wpdb->insert($table_name, array(
                 'user_id' => $user_id,
-                'wallet_balance' => 0,
+                'wallet_balance' => $wallet_balance,
                 'savings_balance' => 0
             ));
             
             return (object) array(
-                'wallet_balance' => 0,
+                'wallet_balance' => $wallet_balance,
                 'savings_balance' => 0
             );
         }
+
+        if (abs((float) $balance->wallet_balance) < self::BALANCE_EPSILON) {
+            $wallet_balance = self::calculate_wallet_balance_from_transactions($user_id);
+            if (abs((float) $wallet_balance) >= self::BALANCE_EPSILON) {
+                $wpdb->update(
+                    $table_name,
+                    array('wallet_balance' => $wallet_balance),
+                    array('user_id' => $user_id)
+                );
+                $balance->wallet_balance = $wallet_balance;
+            }
+        }
         
         return $balance;
+    }
+
+    private static function calculate_wallet_balance_from_transactions($user_id) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'gsp_transactions';
+
+        $conversion_like = $wpdb->esc_like('conversion_') . '%';
+        $wallet_balance = $wpdb->get_var($wpdb->prepare(
+            "SELECT SUM(CASE
+                WHEN type IN ('deposit', 'transfer_in') THEN amount
+                WHEN type IN ('withdrawal', 'transfer_out') THEN -amount
+                WHEN type LIKE %s THEN -amount
+                ELSE 0
+            END)
+            FROM {$table_name}
+            WHERE user_id = %d AND status = %s",
+            $conversion_like,
+            $user_id,
+            'approved'
+        ));
+
+        if ($wallet_balance === null) {
+            return 0.0;
+        }
+
+        return (float) $wallet_balance;
     }
     
     /**
