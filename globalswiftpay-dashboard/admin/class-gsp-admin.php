@@ -87,6 +87,16 @@ class GSP_Admin {
             'globalswiftpay-settings',
             array($this, 'render_settings_page')
         );
+
+        // Migration submenu
+        add_submenu_page(
+            'globalswiftpay',
+            __('Wallet Migration', 'globalswiftpay-dashboard'),
+            __('Wallet Migration', 'globalswiftpay-dashboard'),
+            'manage_options',
+            'globalswiftpay-migration',
+            array($this, 'render_migration_page')
+        );
     }
     
     /**
@@ -542,6 +552,35 @@ class GSP_Admin {
                     </div>
                     
                     <button type="submit" class="gsp-admin-btn gsp-btn-save"><?php esc_html_e('Save Settings', 'globalswiftpay-dashboard'); ?></button>
+                </form>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render wallet migration page
+     */
+    public function render_migration_page() {
+        ?>
+        <div class="wrap gsp-admin-wrap">
+            <h1><?php esc_html_e('Wallet Migration', 'globalswiftpay-dashboard'); ?></h1>
+            <p class="gsp-settings-description"><?php esc_html_e('Detect wallet balances from Wallet System for WooCommerce and migrate them into GlobalSwiftPay balances.', 'globalswiftpay-dashboard'); ?></p>
+
+            <div class="gsp-admin-settings">
+                <form id="gsp-wallet-migration-form" class="gsp-settings-form">
+                    <div class="gsp-form-group">
+                        <label for="gsp-wallet-source"><?php esc_html_e('Detected Source', 'globalswiftpay-dashboard'); ?></label>
+                        <select id="gsp-wallet-source" name="wallet_source" class="gsp-input gsp-select">
+                            <option value=""><?php esc_html_e('Select a source', 'globalswiftpay-dashboard'); ?></option>
+                        </select>
+                        <p class="gsp-settings-description"><?php esc_html_e('Use Detect Sources to scan available balance tables and meta keys.', 'globalswiftpay-dashboard'); ?></p>
+                    </div>
+
+                    <div class="gsp-form-group">
+                        <button type="button" class="gsp-admin-btn gsp-btn-save" id="gsp-detect-wallet-sources"><?php esc_html_e('Detect Sources', 'globalswiftpay-dashboard'); ?></button>
+                        <button type="submit" class="gsp-admin-btn gsp-btn-approve"><?php esc_html_e('Run Migration', 'globalswiftpay-dashboard'); ?></button>
+                    </div>
                 </form>
             </div>
         </div>

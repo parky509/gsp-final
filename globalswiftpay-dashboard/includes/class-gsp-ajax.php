@@ -26,6 +26,8 @@ class GSP_Ajax {
         add_action('wp_ajax_gsp_admin_update_conversion', array($this, 'admin_update_conversion'));
         add_action('wp_ajax_gsp_admin_update_settings', array($this, 'admin_update_settings'));
         add_action('wp_ajax_gsp_admin_update_user_balance', array($this, 'admin_update_user_balance'));
+        add_action('wp_ajax_gsp_admin_detect_wallet_sources', array($this, 'admin_detect_wallet_sources'));
+        add_action('wp_ajax_gsp_admin_migrate_wallet_balances', array($this, 'admin_migrate_wallet_balances'));
     }
     
     /**
@@ -515,5 +517,38 @@ class GSP_Ajax {
         GSP_User::set_wallet_balance($user_id, $balance);
         
         wp_send_json_success(array('message' => 'User balance updated successfully.'));
+    }
+
+    /**
+     * Admin: Detect wallet sources from other plugins
+     */
+    public function admin_detect_wallet_sources() {
+        $this->verify_admin_nonce();
+
+        $sources = GSP_User::detect_wallet_sources();
+
+        wp_send_json_success(array('sources' => $sources));
+    }
+
+    /**
+     * Admin: Migrate wallet balances from selected source
+     */
+    public function admin_migrate_wallet_balances() {
+        $this->verify_admin_nonce();
+
+        $source_id = isset($_POST['source_id']) ? sanitize_text_field(wp_unslash($_POST['source_id'])) : '';
+        if (empty($source_id)) {
+            wp_send_json_error(array('message' => 'Select a source to migrate.'));
+        }
+
+        $result = GSP_User::migrate_wallet_balances($source_id);
+
+        wp_send_json_success(array(
+            'message' => sprintf(
+                'Wallet migration completed. Updated %1$d of %2$d records.',
+                (int) $result['updated'],
+                (int) $result['total']
+            )
+        ));
     }
 }

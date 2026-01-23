@@ -7,6 +7,7 @@
 
     // Admin Actions Handler
     const AdminActions = {
+        errorMessage: 'An error occurred. Please try again.',
         init: function() {
             // Approve/Decline buttons
             $(document).on('click', '.gsp-admin-btn[data-action]', function() {
@@ -44,6 +45,16 @@
             $('#gsp-settings-form').on('submit', function(e) {
                 e.preventDefault();
                 AdminActions.saveSettings($(this));
+            });
+
+            // Wallet migration form
+            $('#gsp-wallet-migration-form').on('submit', function(e) {
+                e.preventDefault();
+                AdminActions.runWalletMigration($(this));
+            });
+
+            $('#gsp-detect-wallet-sources').on('click', function() {
+                AdminActions.detectWalletSources($(this));
             });
             
             // Modal close
@@ -108,7 +119,7 @@
                 },
                 error: function() {
                     $btn.prop('disabled', false).text(status === 'approved' ? 'Approve' : 'Decline');
-                    AdminActions.showNotification('An error occurred. Please try again.', 'error');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
                 }
             });
         },
@@ -146,7 +157,7 @@
                 },
                 error: function() {
                     $btn.prop('disabled', false).text('Save Balance');
-                    AdminActions.showNotification('An error occurred. Please try again.', 'error');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
                 }
             });
         },
@@ -181,7 +192,75 @@
                 },
                 error: function() {
                     $btn.prop('disabled', false).text('Save Settings');
-                    AdminActions.showNotification('An error occurred. Please try again.', 'error');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        detectWalletSources: function($button) {
+            $button.prop('disabled', true).text('Detecting...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_detect_wallet_sources',
+                    nonce: gsp_admin_ajax.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).text('Detect Sources');
+                    if (response.success) {
+                        const $select = $('#gsp-wallet-source');
+                        $select.empty();
+                        $select.append($('<option>').val('').text('Select a source'));
+                        if (response.data.sources && response.data.sources.length) {
+                            response.data.sources.forEach(function(source) {
+                                $select.append($('<option>').val(source.id).text(source.label));
+                            });
+                            AdminActions.showNotification('Sources detected successfully.', 'success');
+                        } else {
+                            AdminActions.showNotification('No wallet sources found.', 'error');
+                        }
+                    } else {
+                        AdminActions.showNotification(response.data.message || 'Failed to detect sources.', 'error');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).text('Detect Sources');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        runWalletMigration: function($form) {
+            const $btn = $form.find('button[type="submit"]');
+            const sourceId = $('#gsp-wallet-source').val();
+            if (!sourceId) {
+                AdminActions.showNotification('Select a wallet source before migrating.', 'error');
+                return;
+            }
+
+            $btn.prop('disabled', true).text('Migrating...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_migrate_wallet_balances',
+                    nonce: gsp_admin_ajax.nonce,
+                    source_id: sourceId
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).text('Run Migration');
+                    if (response.success) {
+                        AdminActions.showNotification(response.data.message, 'success');
+                    } else {
+                        AdminActions.showNotification(response.data.message || 'Migration failed.', 'error');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).text('Run Migration');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
                 }
             });
         },
