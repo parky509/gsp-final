@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 class GSP_User {
     private static $balances_table_checked = false;
     private const BALANCE_EPSILON = 0.01;
+    private static $wallet_id_tables = null;
     /**
      * Known wallet balance meta keys from common wallet plugins.
      */
@@ -92,6 +93,7 @@ class GSP_User {
             $wpdb->esc_like($prefix) . '%wallet%'
         ));
         $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables));
+        $user_columns = array('user_id', 'customer_id', 'userid');
         $balance_columns = array('wallet_balance', 'balance', 'total_balance');
 
         foreach ($table_candidates as $table) {
@@ -111,19 +113,31 @@ class GSP_User {
                 'SHOW COLUMNS FROM `%s`',
                 $table_name
             ));
-            if (!in_array('user_id', $columns, true)) {
+            $columns_map = array();
+            foreach ($columns as $column) {
+                $columns_map[strtolower($column)] = $column;
+            }
+
+            $user_column = '';
+            foreach ($user_columns as $candidate) {
+                if (isset($columns_map[$candidate])) {
+                    $user_column = $columns_map[$candidate];
+                    break;
+                }
+            }
+            if ($user_column === '') {
                 continue;
             }
 
             foreach ($balance_columns as $column) {
-                if (in_array($column, $columns, true)) {
+                if (isset($columns_map[$column])) {
                     $sources[] = array(
-                        'id' => sprintf('table|%s|user_id|%s', $table_name, $column),
+                        'id' => sprintf('table|%s|%s|%s', $table_name, $user_column, $columns_map[$column]),
                         'type' => 'table',
                         'label' => sprintf(__('Table %1$s (%2$s)', 'globalswiftpay-dashboard'), $table_name, $column),
                         'table' => $table_name,
-                        'user_column' => 'user_id',
-                        'balance_column' => $column
+                        'user_column' => $user_column,
+                        'balance_column' => $columns_map[$column]
                     );
                     break;
                 }
@@ -186,16 +200,29 @@ class GSP_User {
                 'SHOW COLUMNS FROM `%s`',
                 $table
             ));
+            $columns_map = array();
+            foreach ($columns as $column) {
+                $columns_map[strtolower($column)] = $column;
+            }
             $user_column = preg_replace('/[^A-Za-z0-9_]/', '', $selected['user_column']);
             $balance_column = preg_replace('/[^A-Za-z0-9_]/', '', $selected['balance_column']);
+            $user_column_key = strtolower($user_column);
+            $balance_column_key = strtolower($balance_column);
+            if (isset($columns_map[$user_column_key])) {
+                $user_column = $columns_map[$user_column_key];
+            }
+            if (isset($columns_map[$balance_column_key])) {
+                $balance_column = $columns_map[$balance_column_key];
+            }
             if (!in_array($user_column, $columns, true) || !in_array($balance_column, $columns, true)) {
                 return array('updated' => 0, 'total' => 0);
             }
+            $table_safe = esc_sql($table);
             $rows = $wpdb->get_results($wpdb->prepare(
                 'SELECT `%1$s` AS user_id, `%2$s` AS balance FROM `%3$s`',
                 $user_column,
                 $balance_column,
-                $table
+                $table_safe
             ));
         }
 
@@ -203,8 +230,17 @@ class GSP_User {
         $updated = 0;
         foreach ($rows as $row) {
             $user_id = (int) $row->user_id;
-            $balance = is_numeric($row->balance) ? (float) $row->balance : 0.0;
+            $balance = null;
+            if ($selected['type'] === 'meta') {
+                $balance = self::resolve_wallet_balance_from_meta($selected['meta_key'], $row->balance, $user_id);
+            } else {
+                $balance = is_numeric($row->balance) ? (float) $row->balance : null;
+            }
             if ($user_id <= 0) {
+                continue;
+            }
+
+            if ($balance === null) {
                 continue;
             }
 
@@ -215,6 +251,156 @@ class GSP_User {
         }
 
         return array('updated' => $updated, 'total' => $total);
+    }
+
+    private static function resolve_wallet_balance_from_meta($meta_key, $meta_value, $user_id) {
+        $raw_value = maybe_unserialize($meta_value);
+        $numeric_value = is_numeric($raw_value) ? (int) $raw_value : null;
+        $meta_key = strtolower((string) $meta_key);
+        $is_wallet_id_key = (strpos($meta_key, 'wallet_id') !== false || $meta_key === 'wps_wallet');
+
+        if ($numeric_value !== null && $is_wallet_id_key) {
+            $balance = self::resolve_wallet_balance_from_id($numeric_value, $user_id);
+            if ($balance !== null) {
+                return $balance;
+            }
+        }
+
+        $balance = self::normalize_wallet_balance_value($raw_value);
+        if ($balance !== null) {
+            return $balance;
+        }
+
+        if ($numeric_value !== null) {
+            $balance = self::resolve_wallet_balance_from_id($numeric_value, $user_id);
+            if ($balance !== null) {
+                return $balance;
+            }
+        }
+
+        return null;
+    }
+
+    private static function normalize_wallet_balance_value($value) {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        if (is_array($value)) {
+            $keys = array('wallet_balance', 'balance', 'amount', 'wallet');
+            foreach ($keys as $key) {
+                if (isset($value[$key]) && is_numeric($value[$key])) {
+                    return (float) $value[$key];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static function resolve_wallet_balance_from_id($wallet_id, $user_id = null) {
+        global $wpdb;
+
+        $tables = self::get_wallet_id_tables();
+        foreach ($tables as $table_info) {
+            $table_name = esc_sql($table_info['table']);
+            $id_column = preg_replace('/[^A-Za-z0-9_]/', '', $table_info['id_column']);
+            $balance_column = preg_replace('/[^A-Za-z0-9_]/', '', $table_info['balance_column']);
+            $user_column = isset($table_info['user_column'])
+                ? preg_replace('/[^A-Za-z0-9_]/', '', $table_info['user_column'])
+                : '';
+            if ($user_id && $user_column !== '') {
+                $balance = $wpdb->get_var($wpdb->prepare(
+                    "SELECT `{$balance_column}` FROM `{$table_name}` WHERE `{$id_column}` = %d AND `{$user_column}` = %d",
+                    $wallet_id,
+                    $user_id
+                ));
+            } else {
+                $balance = $wpdb->get_var($wpdb->prepare(
+                    "SELECT `{$balance_column}` FROM `{$table_name}` WHERE `{$id_column}` = %d",
+                    $wallet_id
+                ));
+            }
+            if ($balance !== null && is_numeric($balance)) {
+                return (float) $balance;
+            }
+        }
+
+        return null;
+    }
+
+    private static function get_wallet_id_tables() {
+        if (self::$wallet_id_tables !== null) {
+            return self::$wallet_id_tables;
+        }
+
+        global $wpdb;
+        $prefix = preg_replace('/[^A-Za-z0-9_]/', '', $wpdb->prefix);
+        $table_candidates = array(
+            $prefix . 'wps_wsfw_wallet',
+            $prefix . 'wps_wsfw_wallet_balance',
+            $prefix . 'wps_wallet',
+            $prefix . 'woo_wallet_balance'
+        );
+        $wallet_tables = $wpdb->get_col($wpdb->prepare(
+            'SHOW TABLES LIKE %s',
+            $wpdb->esc_like($prefix) . '%wallet%'
+        ));
+        $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables));
+        self::$wallet_id_tables = array();
+
+        $id_columns = array('id', 'wallet_id');
+        $user_columns = array('user_id', 'customer_id', 'userid');
+        $balance_columns = array('wallet_balance', 'balance', 'total_balance', 'amount');
+
+        foreach ($table_candidates as $table) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+                continue;
+            }
+            $columns = $wpdb->get_col($wpdb->prepare(
+                'SHOW COLUMNS FROM `%s`',
+                $table
+            ));
+            $id_column = '';
+            $balance_column = '';
+            $user_column = '';
+
+            foreach ($id_columns as $candidate) {
+                if (in_array($candidate, $columns, true)) {
+                    $id_column = $candidate;
+                    break;
+                }
+            }
+            if (!$id_column) {
+                continue;
+            }
+
+            foreach ($user_columns as $candidate) {
+                if (in_array($candidate, $columns, true)) {
+                    $user_column = $candidate;
+                    break;
+                }
+            }
+
+            foreach ($balance_columns as $candidate) {
+                if (in_array($candidate, $columns, true)) {
+                    $balance_column = $candidate;
+                    break;
+                }
+            }
+            if (!$balance_column) {
+                continue;
+            }
+
+            self::$wallet_id_tables[] = array(
+                'table' => $table,
+                'id_column' => $id_column,
+                'balance_column' => $balance_column,
+                'user_column' => $user_column
+            );
+        }
+
+        return self::$wallet_id_tables;
     }
 
     private static function calculate_wallet_balance_from_transactions($user_id) {
