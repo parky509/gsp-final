@@ -3,7 +3,7 @@
  * Plugin Name: GlobalSwiftPay Dashboard
  * Plugin URI: https://globalswiftpay2.com
  * Description: A professional investment dashboard plugin with glass morphism design for GlobalSwiftPay
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: GlobalSwiftPay
  * Author URI: https://globalswiftpay2.com
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('GSP_VERSION', '1.0.6');
+define('GSP_VERSION', '1.0.7');
 define('GSP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GSP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GSP_PLUGIN_BASENAME', plugin_basename(__FILE__));

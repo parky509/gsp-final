@@ -23,6 +23,8 @@ class GSP_User {
         'wallet_balance',
         '_wallet_balance'
     );
+    private const WALLET_CREDIT_TYPES = array('credit', 'deposit', 'add', 'added', 'topup');
+    private const WALLET_DEBIT_TYPES = array('debit', 'withdraw', 'deduct', 'spent');
     
     /**
      * Get user balance
@@ -86,7 +88,8 @@ class GSP_User {
             $prefix . 'wps_wsfw_wallet',
             $prefix . 'wps_wsfw_wallet_balance',
             $prefix . 'wps_wallet',
-            $prefix . 'woo_wallet_balance'
+            $prefix . 'woo_wallet_balance',
+            $prefix . 'wps_wsfw_wallet_transaction'
         );
         $wallet_tables = $wpdb->get_col($wpdb->prepare(
             'SHOW TABLES LIKE %s',
@@ -94,7 +97,7 @@ class GSP_User {
         ));
         $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables));
         $user_columns = array('user_id', 'customer_id', 'userid');
-        $balance_columns = array('wallet_balance', 'balance', 'total_balance');
+        $balance_columns = array('wallet_balance', 'balance', 'total_balance', 'amount');
 
         foreach ($table_candidates as $table) {
             if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {
@@ -109,14 +112,12 @@ class GSP_User {
                 continue;
             }
 
-            $columns = $wpdb->get_col($wpdb->prepare(
-                'SHOW COLUMNS FROM `%s`',
-                $table_name
-            ));
+            $columns = $wpdb->get_col(sprintf('SHOW COLUMNS FROM `%s`', esc_sql($table_name)));
             $columns_map = array();
             foreach ($columns as $column) {
                 $columns_map[strtolower($column)] = $column;
             }
+            $has_transaction_type = isset($columns_map['transaction_type']) || isset($columns_map['transaction_type_1']);
 
             $user_column = '';
             foreach ($user_columns as $candidate) {
@@ -129,18 +130,38 @@ class GSP_User {
                 continue;
             }
 
-            foreach ($balance_columns as $column) {
-                if (isset($columns_map[$column])) {
-                    $sources[] = array(
-                        'id' => sprintf('table|%s|%s|%s', $table_name, $user_column, $columns_map[$column]),
-                        'type' => 'table',
-                        'label' => sprintf(__('Table %1$s (%2$s)', 'globalswiftpay-dashboard'), $table_name, $column),
-                        'table' => $table_name,
-                        'user_column' => $user_column,
-                        'balance_column' => $columns_map[$column]
-                    );
-                    break;
+            if (!$has_transaction_type) {
+                foreach ($balance_columns as $column) {
+                    if (isset($columns_map[$column])) {
+                        $sources[] = array(
+                            'id' => sprintf('table|%s|%s|%s', $table_name, $user_column, $columns_map[$column]),
+                            'type' => 'table',
+                            'label' => sprintf(__('Table %1$s (%2$s)', 'globalswiftpay-dashboard'), $table_name, $column),
+                            'table' => $table_name,
+                            'user_column' => $user_column,
+                            'balance_column' => $columns_map[$column]
+                        );
+                        break;
+                    }
                 }
+            }
+
+            if (isset($columns_map['amount'])) {
+                $transaction_column = '';
+                if (isset($columns_map['transaction_type'])) {
+                    $transaction_column = $columns_map['transaction_type'];
+                } elseif (isset($columns_map['transaction_type_1'])) {
+                    $transaction_column = $columns_map['transaction_type_1'];
+                }
+                $sources[] = array(
+                    'id' => sprintf('transactions|%s|%s|amount', $table_name, $user_column),
+                    'type' => 'transactions',
+                    'label' => sprintf(__('Table %1$s (transaction sum)', 'globalswiftpay-dashboard'), $table_name),
+                    'table' => $table_name,
+                    'user_column' => $user_column,
+                    'balance_column' => $columns_map['amount'],
+                    'transaction_type_column' => $transaction_column
+                );
             }
         }
 
@@ -191,15 +212,12 @@ class GSP_User {
                 "SELECT user_id, meta_value AS balance FROM {$wpdb->usermeta} WHERE meta_key = %s",
                 $selected['meta_key']
             ));
-        } elseif ($selected['type'] === 'table') {
+        } elseif ($selected['type'] === 'table' || $selected['type'] === 'transactions') {
             $table = $selected['table'];
             if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {
                 return array('updated' => 0, 'total' => 0);
             }
-            $columns = $wpdb->get_col($wpdb->prepare(
-                'SHOW COLUMNS FROM `%s`',
-                $table
-            ));
+            $columns = $wpdb->get_col(sprintf('SHOW COLUMNS FROM `%s`', esc_sql($table)));
             $columns_map = array();
             foreach ($columns as $column) {
                 $columns_map[strtolower($column)] = $column;
@@ -214,16 +232,58 @@ class GSP_User {
             if (isset($columns_map[$balance_column_key])) {
                 $balance_column = $columns_map[$balance_column_key];
             }
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $user_column) || !preg_match('/^[A-Za-z0-9_]+$/', $balance_column)) {
+                return array('updated' => 0, 'total' => 0);
+            }
             if (!in_array($user_column, $columns, true) || !in_array($balance_column, $columns, true)) {
                 return array('updated' => 0, 'total' => 0);
             }
             $table_safe = esc_sql($table);
-            $rows = $wpdb->get_results($wpdb->prepare(
-                'SELECT `%1$s` AS user_id, `%2$s` AS balance FROM `%3$s`',
-                $user_column,
-                $balance_column,
-                $table_safe
-            ));
+            if ($selected['type'] === 'transactions') {
+                $transaction_column = '';
+                if (!empty($selected['transaction_type_column'])) {
+                    $transaction_column = preg_replace('/[^A-Za-z0-9_]/', '', $selected['transaction_type_column']);
+                }
+
+                if ($transaction_column && !in_array($transaction_column, $columns, true)) {
+                    $transaction_column = '';
+                }
+
+                if ($transaction_column) {
+                    if (!preg_match('/^[A-Za-z0-9_]+$/', $transaction_column)) {
+                        $transaction_column = '';
+                    }
+                    $credit_types = array_map('sanitize_text_field', self::WALLET_CREDIT_TYPES);
+                    $debit_types = array_map('sanitize_text_field', self::WALLET_DEBIT_TYPES);
+                    $credit_placeholders = implode(',', array_fill(0, count($credit_types), '%s'));
+                    $debit_placeholders = implode(',', array_fill(0, count($debit_types), '%s'));
+                    $query = sprintf(
+                        'SELECT `%1$s` AS user_id, SUM(CASE WHEN `%2$s` IN (%3$s) THEN `%4$s` WHEN `%2$s` IN (%5$s) THEN -`%4$s` ELSE `%4$s` END) AS balance FROM `%6$s` GROUP BY `%1$s`',
+                        $user_column,
+                        $transaction_column,
+                        $credit_placeholders,
+                        $balance_column,
+                        $debit_placeholders,
+                        $table_safe
+                    );
+                    $rows = $wpdb->get_results($wpdb->prepare($query, array_merge($credit_types, $debit_types)));
+                } else {
+                    $query = sprintf(
+                        'SELECT `%1$s` AS user_id, SUM(`%2$s`) AS balance FROM `%3$s` GROUP BY `%1$s`',
+                        $user_column,
+                        $balance_column,
+                        $table_safe
+                    );
+                    $rows = $wpdb->get_results($query);
+                }
+            } else {
+                $rows = $wpdb->get_results($wpdb->prepare(
+                    'SELECT `%1$s` AS user_id, `%2$s` AS balance FROM `%3$s`',
+                    $user_column,
+                    $balance_column,
+                    $table_safe
+                ));
+            }
         }
 
         $total = 0;
@@ -357,10 +417,7 @@ class GSP_User {
             if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {
                 continue;
             }
-            $columns = $wpdb->get_col($wpdb->prepare(
-                'SHOW COLUMNS FROM `%s`',
-                $table
-            ));
+            $columns = $wpdb->get_col(sprintf('SHOW COLUMNS FROM `%s`', esc_sql($table)));
             $id_column = '';
             $balance_column = '';
             $user_column = '';
