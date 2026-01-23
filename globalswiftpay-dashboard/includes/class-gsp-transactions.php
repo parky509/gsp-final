@@ -8,6 +8,51 @@ if (!defined('ABSPATH')) {
 }
 
 class GSP_Transactions {
+    /**
+     * Get display name for a user ID.
+     */
+    private static function get_user_display_name($user_id) {
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return '';
+        }
+
+        return $user->display_name ?? $user->user_login;
+    }
+
+    /**
+     * Populate sender name for a transaction record (mutates the object).
+     */
+    private static function enrich_transaction_sender_name($transaction) {
+        $details = maybe_unserialize($transaction->details);
+        // If unserialize fails, fall back to empty details to avoid warnings.
+        if ($details === false) {
+            $details = array();
+        }
+        $transaction->sender_name = '';
+
+        if ($transaction->type === 'deposit') {
+            if (is_array($details)) {
+                if (!empty($details['sender_name'])) {
+                    $transaction->sender_name = $details['sender_name'];
+                } elseif (!empty($details['name'])) {
+                    $transaction->sender_name = $details['name'];
+                }
+            }
+
+            if (empty($transaction->sender_name)) {
+                $transaction->sender_name = self::get_user_display_name($transaction->user_id);
+            }
+        } elseif ($transaction->type === 'transfer_in') {
+            $from_user_id = is_array($details) && isset($details['from_user_id']) ? (int) $details['from_user_id'] : 0;
+            if ($from_user_id) {
+                $transaction->sender_name = self::get_user_display_name($from_user_id);
+            }
+        } elseif ($transaction->type === 'transfer_out') {
+            $transaction->sender_name = self::get_user_display_name($transaction->user_id);
+        }
+
+    }
     
     /**
      * Create a new transaction record
@@ -95,6 +140,10 @@ class GSP_Transactions {
             $limit,
             $offset
         ));
+
+        foreach ($results as $transaction) {
+            self::enrich_transaction_sender_name($transaction);
+        }
         
         return $results;
     }

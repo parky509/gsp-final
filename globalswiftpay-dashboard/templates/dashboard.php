@@ -112,6 +112,7 @@ $display_name = $current_user->display_name ?: $current_user->user_login;
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Type', 'globalswiftpay-dashboard'); ?></th>
+                            <th><?php esc_html_e('Sender', 'globalswiftpay-dashboard'); ?></th>
                             <th><?php esc_html_e('Amount', 'globalswiftpay-dashboard'); ?></th>
                             <th><?php esc_html_e('Status', 'globalswiftpay-dashboard'); ?></th>
                             <th><?php esc_html_e('Date', 'globalswiftpay-dashboard'); ?></th>
@@ -120,7 +121,7 @@ $display_name = $current_user->display_name ?: $current_user->user_login;
                     <tbody>
                         <?php if (empty($transactions)): ?>
                             <tr>
-                                <td colspan="4" class="gsp-no-transactions"><?php esc_html_e('No transactions yet.', 'globalswiftpay-dashboard'); ?></td>
+                                <td colspan="5" class="gsp-no-transactions"><?php esc_html_e('No transactions yet.', 'globalswiftpay-dashboard'); ?></td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($transactions as $transaction): ?>
@@ -130,6 +131,7 @@ $display_name = $current_user->display_name ?: $current_user->user_login;
                                             <?php echo esc_html(ucwords(str_replace('_', ' ', $transaction->type))); ?>
                                         </span>
                                     </td>
+                                    <td class="gsp-transaction-sender"><?php echo esc_html($transaction->sender_name ?? ''); ?></td>
                                     <td class="gsp-transaction-amount">$<?php echo esc_html(number_format($transaction->amount, 2)); ?></td>
                                     <td>
                                         <span class="gsp-status gsp-status-<?php echo esc_attr($transaction->status); ?>">

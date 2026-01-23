@@ -361,7 +361,7 @@
             $tbody.empty();
             
             if (transactions.length === 0) {
-                $tbody.append('<tr><td colspan="4" class="gsp-no-transactions">No transactions yet.</td></tr>');
+                $tbody.append('<tr><td colspan="5" class="gsp-no-transactions">No transactions yet.</td></tr>');
                 return;
             }
             
@@ -377,6 +377,7 @@
                     minute: '2-digit'
                 });
                 
+                const senderName = tx.sender_name || '';
                 const row = `
                     <tr>
                         <td>
@@ -384,6 +385,7 @@
                                 ${tx.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </span>
                         </td>
+                        <td class="gsp-transaction-sender">${senderName}</td>
                         <td class="gsp-transaction-amount">$${parseFloat(tx.amount).toFixed(2)}</td>
                         <td>
                             <span class="gsp-status ${statusClass}">

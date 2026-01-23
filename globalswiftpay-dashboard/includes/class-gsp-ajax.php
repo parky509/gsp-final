@@ -363,6 +363,8 @@ class GSP_Ajax {
         if (!$user_id) {
             wp_send_json_error(array('message' => 'Please log in to continue.'));
         }
+
+        nocache_headers();
         
         $transactions = GSP_Transactions::get_user_transactions($user_id);
         
@@ -379,6 +381,8 @@ class GSP_Ajax {
         if (!$user_id) {
             wp_send_json_error(array('message' => 'Please log in to continue.'));
         }
+
+        nocache_headers();
         
         $balance = GSP_User::get_balance($user_id);
         
