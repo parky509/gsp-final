@@ -580,6 +580,7 @@ class GSP_Admin {
                     <div class="gsp-form-group">
                         <button type="button" class="gsp-admin-btn gsp-btn-save" id="gsp-detect-wallet-sources"><?php esc_html_e('Detect Sources', 'globalswiftpay-dashboard'); ?></button>
                         <button type="submit" class="gsp-admin-btn gsp-btn-approve"><?php esc_html_e('Run Migration', 'globalswiftpay-dashboard'); ?></button>
+                        <button type="button" class="gsp-admin-btn gsp-btn-approve" id="gsp-migrate-all-sources"><?php esc_html_e('Migrate All Sources', 'globalswiftpay-dashboard'); ?></button>
                     </div>
                 </form>
             </div>

@@ -56,6 +56,10 @@
             $('#gsp-detect-wallet-sources').on('click', function() {
                 AdminActions.detectWalletSources($(this));
             });
+
+            $('#gsp-migrate-all-sources').on('click', function() {
+                AdminActions.runAllWalletMigrations($(this));
+            });
             
             // Modal close
             $(document).on('click', '.gsp-modal-close', function() {
@@ -260,6 +264,31 @@
                 },
                 error: function() {
                     $btn.prop('disabled', false).text('Run Migration');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        runAllWalletMigrations: function($button) {
+            $button.prop('disabled', true).text('Migrating...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_migrate_all_wallet_sources',
+                    nonce: gsp_admin_ajax.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).text('Migrate All Sources');
+                    if (response.success) {
+                        AdminActions.showNotification(response.data.message, 'success');
+                    } else {
+                        AdminActions.showNotification(response.data.message || 'Migration failed.', 'error');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).text('Migrate All Sources');
                     AdminActions.showNotification(AdminActions.errorMessage, 'error');
                 }
             });

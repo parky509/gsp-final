@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
 class GSP_User {
     private static $balances_table_checked = false;
     private const BALANCE_EPSILON = 0.01;
+    private const TABLE_NAME_REGEX = '/^[A-Za-z0-9_]+$/';
+    private const TABLE_EXCLUDE_REGEX = '/^(wp_|wpqj_)(posts|postmeta|terms|term_taxonomy|term_relationships|users|usermeta|options|comments|commentmeta|links|site|sitemeta|actionscheduler_.*|woocommerce_.*|wc_.*)$/';
     private static $wallet_id_tables = null;
     /**
      * Known wallet balance meta keys from common wallet plugins.
@@ -95,14 +97,25 @@ class GSP_User {
             'SHOW TABLES LIKE %s',
             $wpdb->esc_like($prefix) . '%wallet%'
         ));
-        $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables));
+        /**
+         * Filter whether to enable full database table scanning for wallet balances.
+         *
+         * @param bool $full_scan_enabled Enable full scan of all tables.
+         */
+        $full_scan_enabled = apply_filters('gsp_wallet_migration_full_scan', true);
+        if ($full_scan_enabled) {
+            $all_tables = $wpdb->get_col('SHOW TABLES');
+            $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables, $all_tables));
+        } else {
+            $table_candidates = array_unique(array_merge($table_candidates, $wallet_tables));
+        }
         $user_columns = array('user_id', 'customer_id', 'userid');
         $balance_columns = array('wallet_balance', 'balance', 'total_balance', 'amount');
+        $table_candidates = array_values(array_filter($table_candidates, function($table) {
+            return self::is_allowed_wallet_table($table);
+        }));
 
         foreach ($table_candidates as $table) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {
-                continue;
-            }
             $table_name = $table;
             $table_exists = $wpdb->get_var($wpdb->prepare(
                 'SHOW TABLES LIKE %s',
@@ -458,6 +471,14 @@ class GSP_User {
         }
 
         return self::$wallet_id_tables;
+    }
+
+    private static function is_allowed_wallet_table($table) {
+        if (!preg_match(self::TABLE_NAME_REGEX, $table)) {
+            return false;
+        }
+
+        return !preg_match(self::TABLE_EXCLUDE_REGEX, $table);
     }
 
     private static function calculate_wallet_balance_from_transactions($user_id) {

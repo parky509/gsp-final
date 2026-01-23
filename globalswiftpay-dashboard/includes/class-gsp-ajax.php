@@ -28,6 +28,7 @@ class GSP_Ajax {
         add_action('wp_ajax_gsp_admin_update_user_balance', array($this, 'admin_update_user_balance'));
         add_action('wp_ajax_gsp_admin_detect_wallet_sources', array($this, 'admin_detect_wallet_sources'));
         add_action('wp_ajax_gsp_admin_migrate_wallet_balances', array($this, 'admin_migrate_wallet_balances'));
+        add_action('wp_ajax_gsp_admin_migrate_all_wallet_sources', array($this, 'admin_migrate_all_wallet_sources'));
     }
     
     /**
@@ -548,6 +549,51 @@ class GSP_Ajax {
                 'Wallet migration completed. Updated %1$d of %2$d records.',
                 (int) $result['updated'],
                 (int) $result['total']
+            )
+        ));
+    }
+
+    /**
+     * Admin: Migrate balances from all detected sources
+     */
+    public function admin_migrate_all_wallet_sources() {
+        $this->verify_admin_nonce();
+
+        $sources = GSP_User::detect_wallet_sources();
+        if (empty($sources)) {
+            wp_send_json_error(array('message' => 'No wallet sources detected.'));
+        }
+
+        $total_updated = 0;
+        $total_records = 0;
+        $failed_sources = array();
+        foreach ($sources as $source) {
+            try {
+                $result = GSP_User::migrate_wallet_balances($source['id']);
+                $total_updated += (int) $result['updated'];
+                $total_records += (int) $result['total'];
+            } catch (Exception $e) {
+                error_log('Wallet migration failed for a source: ' . $e->getMessage());
+                $failed_sources[] = isset($source['label']) ? $source['label'] : $source['id'];
+            }
+        }
+
+        if (!empty($failed_sources)) {
+            wp_send_json_error(array(
+                'message' => sprintf(
+                    'Migration completed with errors. Updated %1$d of %2$d records. Failed sources: %3$s',
+                    $total_updated,
+                    $total_records,
+                    implode(', ', $failed_sources)
+                )
+            ));
+        }
+
+        wp_send_json_success(array(
+            'message' => sprintf(
+                'Wallet migration completed. Updated %1$d of %2$d records.',
+                $total_updated,
+                $total_records
             )
         ));
     }
