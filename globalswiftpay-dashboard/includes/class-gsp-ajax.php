@@ -26,6 +26,9 @@ class GSP_Ajax {
         add_action('wp_ajax_gsp_admin_update_conversion', array($this, 'admin_update_conversion'));
         add_action('wp_ajax_gsp_admin_update_settings', array($this, 'admin_update_settings'));
         add_action('wp_ajax_gsp_admin_update_user_balance', array($this, 'admin_update_user_balance'));
+        add_action('wp_ajax_gsp_admin_create_user', array($this, 'admin_create_user'));
+        add_action('wp_ajax_gsp_admin_update_user', array($this, 'admin_update_user'));
+        add_action('wp_ajax_gsp_admin_delete_user', array($this, 'admin_delete_user'));
         add_action('wp_ajax_gsp_admin_detect_wallet_sources', array($this, 'admin_detect_wallet_sources'));
         add_action('wp_ajax_gsp_admin_migrate_wallet_balances', array($this, 'admin_migrate_wallet_balances'));
         add_action('wp_ajax_gsp_admin_migrate_all_wallet_sources', array($this, 'admin_migrate_all_wallet_sources'));
@@ -518,6 +521,95 @@ class GSP_Ajax {
         GSP_User::set_wallet_balance($user_id, $balance);
         
         wp_send_json_success(array('message' => 'User balance updated successfully.'));
+    }
+
+    /**
+     * Admin: Create user
+     */
+    public function admin_create_user() {
+        $this->verify_admin_nonce();
+
+        $username = isset($_POST['username']) ? sanitize_user(wp_unslash($_POST['username'])) : '';
+        $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+        $display_name = isset($_POST['display_name']) ? sanitize_text_field(wp_unslash($_POST['display_name'])) : '';
+        $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
+
+        if (empty($username) || empty($email) || empty($password)) {
+            wp_send_json_error(array('message' => 'Username, email, and password are required.'));
+        }
+
+        if (username_exists($username) || email_exists($email)) {
+            wp_send_json_error(array('message' => 'User already exists.'));
+        }
+
+        $user_id = wp_create_user($username, $password, $email);
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(array('message' => $user_id->get_error_message()));
+        }
+
+        wp_update_user(array(
+            'ID' => $user_id,
+            'display_name' => $display_name ?: $username
+        ));
+
+        wp_send_json_success(array('message' => 'User created successfully.'));
+    }
+
+    /**
+     * Admin: Update user
+     */
+    public function admin_update_user() {
+        $this->verify_admin_nonce();
+
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+        $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+        $display_name = isset($_POST['display_name']) ? sanitize_text_field(wp_unslash($_POST['display_name'])) : '';
+        $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
+
+        if (!$user_id || empty($email)) {
+            wp_send_json_error(array('message' => 'User ID and email are required.'));
+        }
+
+        $userdata = array(
+            'ID' => $user_id,
+            'user_email' => $email,
+            'display_name' => $display_name
+        );
+
+        if (!empty($password)) {
+            $userdata['user_pass'] = $password;
+        }
+
+        $result = wp_update_user($userdata);
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array('message' => 'User updated successfully.'));
+    }
+
+    /**
+     * Admin: Delete user
+     */
+    public function admin_delete_user() {
+        $this->verify_admin_nonce();
+
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+        if (!$user_id) {
+            wp_send_json_error(array('message' => 'Invalid user.'));
+        }
+
+        if (get_current_user_id() === $user_id) {
+            wp_send_json_error(array('message' => 'You cannot delete your own account.'));
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/user.php';
+        $result = wp_delete_user($user_id);
+        if (!$result) {
+            wp_send_json_error(array('message' => 'Failed to delete user.'));
+        }
+
+        wp_send_json_success(array('message' => 'User deleted successfully.'));
     }
 
     /**

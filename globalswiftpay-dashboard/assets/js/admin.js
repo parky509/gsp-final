@@ -34,11 +34,49 @@
                 $('#edit-balance-amount').val(currentBalance);
                 $('#gsp-edit-balance-modal').addClass('active');
             });
+
+            // Add user button
+            $(document).on('click', '#gsp-add-user', function() {
+                $('#gsp-create-user-form')[0].reset();
+                $('#gsp-create-user-modal').addClass('active');
+            });
+
+            // Edit user button
+            $(document).on('click', '.gsp-btn-edit-user', function() {
+                const $row = $(this).closest('tr');
+                $('#edit-user-id').val($row.data('user-id'));
+                $('#edit-username').val($row.data('username'));
+                $('#edit-email').val($row.data('email'));
+                $('#edit-display-name').val($row.data('display-name'));
+                $('#edit-password').val('');
+                $('#gsp-edit-user-modal').addClass('active');
+            });
+
+            // Delete user button
+            $(document).on('click', '.gsp-btn-delete-user', function() {
+                const userId = $(this).data('user-id');
+                if (!confirm('Are you sure you want to delete this user?')) {
+                    return;
+                }
+                AdminActions.deleteUser(userId, $(this));
+            });
             
             // Edit balance form
             $('#gsp-edit-balance-form').on('submit', function(e) {
                 e.preventDefault();
                 AdminActions.updateUserBalance($(this));
+            });
+
+            // Create user form
+            $('#gsp-create-user-form').on('submit', function(e) {
+                e.preventDefault();
+                AdminActions.createUser($(this));
+            });
+
+            // Edit user form
+            $('#gsp-edit-user-form').on('submit', function(e) {
+                e.preventDefault();
+                AdminActions.updateUser($(this));
             });
             
             // Settings form
@@ -161,6 +199,95 @@
                 },
                 error: function() {
                     $btn.prop('disabled', false).text('Save Balance');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        createUser: function($form) {
+            const $btn = $form.find('button[type="submit"]');
+            $btn.prop('disabled', true).text('Creating...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_create_user',
+                    nonce: gsp_admin_ajax.nonce,
+                    username: $('#create-username').val(),
+                    email: $('#create-email').val(),
+                    display_name: $('#create-display-name').val(),
+                    password: $('#create-password').val()
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).text('Create User');
+                    if (response.success) {
+                        AdminActions.showNotification(response.data.message, 'success');
+                        location.reload();
+                    } else {
+                        AdminActions.showNotification(response.data.message, 'error');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).text('Create User');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        updateUser: function($form) {
+            const $btn = $form.find('button[type="submit"]');
+            $btn.prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_update_user',
+                    nonce: gsp_admin_ajax.nonce,
+                    user_id: $('#edit-user-id').val(),
+                    email: $('#edit-email').val(),
+                    display_name: $('#edit-display-name').val(),
+                    password: $('#edit-password').val()
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).text('Save User');
+                    if (response.success) {
+                        AdminActions.showNotification(response.data.message, 'success');
+                        location.reload();
+                    } else {
+                        AdminActions.showNotification(response.data.message, 'error');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).text('Save User');
+                    AdminActions.showNotification(AdminActions.errorMessage, 'error');
+                }
+            });
+        },
+
+        deleteUser: function(userId, $btn) {
+            $btn.prop('disabled', true).text('Deleting...');
+
+            $.ajax({
+                url: gsp_admin_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'gsp_admin_delete_user',
+                    nonce: gsp_admin_ajax.nonce,
+                    user_id: userId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        AdminActions.showNotification(response.data.message, 'success');
+                        $('tr[data-user-id="' + userId + '"]').remove();
+                    } else {
+                        $btn.prop('disabled', false).text('Delete');
+                        AdminActions.showNotification(response.data.message, 'error');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).text('Delete');
                     AdminActions.showNotification(AdminActions.errorMessage, 'error');
                 }
             });

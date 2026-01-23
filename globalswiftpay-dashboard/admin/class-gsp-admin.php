@@ -434,6 +434,10 @@ class GSP_Admin {
         ?>
         <div class="wrap gsp-admin-wrap">
             <h1><?php esc_html_e('User Balances', 'globalswiftpay-dashboard'); ?></h1>
+
+            <div class="gsp-admin-actions" style="margin-bottom: 20px;">
+                <button class="gsp-admin-btn gsp-btn-save" id="gsp-add-user"><?php esc_html_e('Add User', 'globalswiftpay-dashboard'); ?></button>
+            </div>
             
             <div class="gsp-admin-table-container">
                 <table class="gsp-admin-table">
@@ -451,7 +455,7 @@ class GSP_Admin {
                     <tbody>
                         <?php foreach ($users as $user): ?>
                             <?php $balance = GSP_User::get_balance($user->ID); ?>
-                            <tr data-user-id="<?php echo esc_attr($user->ID); ?>">
+                            <tr data-user-id="<?php echo esc_attr($user->ID); ?>" data-username="<?php echo esc_attr($user->user_login); ?>" data-email="<?php echo esc_attr($user->user_email); ?>" data-display-name="<?php echo esc_attr($user->display_name); ?>">
                                 <td><?php echo esc_html($user->ID); ?></td>
                                 <td><?php echo esc_html($user->user_login); ?></td>
                                 <td><?php echo esc_html($user->user_email); ?></td>
@@ -459,7 +463,9 @@ class GSP_Admin {
                                 <td class="gsp-user-wallet-balance">$<?php echo esc_html(number_format($balance->wallet_balance, 2)); ?></td>
                                 <td>$<?php echo esc_html(number_format($balance->savings_balance, 2)); ?></td>
                                 <td>
+                                    <button class="gsp-admin-btn gsp-btn-save gsp-btn-edit-user" data-user-id="<?php echo esc_attr($user->ID); ?>"><?php esc_html_e('Edit User', 'globalswiftpay-dashboard'); ?></button>
                                     <button class="gsp-admin-btn gsp-btn-edit-balance" data-user-id="<?php echo esc_attr($user->ID); ?>" data-balance="<?php echo esc_attr($balance->wallet_balance); ?>"><?php esc_html_e('Edit Balance', 'globalswiftpay-dashboard'); ?></button>
+                                    <button class="gsp-admin-btn gsp-btn-decline gsp-btn-delete-user" data-user-id="<?php echo esc_attr($user->ID); ?>"><?php esc_html_e('Delete', 'globalswiftpay-dashboard'); ?></button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -480,6 +486,61 @@ class GSP_Admin {
                         <input type="number" id="edit-balance-amount" name="balance" step="0.01" min="0" required>
                     </div>
                     <button type="submit" class="gsp-admin-btn gsp-btn-save"><?php esc_html_e('Save Balance', 'globalswiftpay-dashboard'); ?></button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create User Modal -->
+        <div id="gsp-create-user-modal" class="gsp-modal" style="display: none;">
+            <div class="gsp-modal-content">
+                <span class="gsp-modal-close">&times;</span>
+                <h2><?php esc_html_e('Add User', 'globalswiftpay-dashboard'); ?></h2>
+                <form id="gsp-create-user-form">
+                    <div class="gsp-form-group">
+                        <label for="create-username"><?php esc_html_e('Username', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="text" id="create-username" name="username" class="gsp-input" required>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="create-email"><?php esc_html_e('Email', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="email" id="create-email" name="email" class="gsp-input" required>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="create-display-name"><?php esc_html_e('Display Name', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="text" id="create-display-name" name="display_name" class="gsp-input" required>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="create-password"><?php esc_html_e('Password', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="password" id="create-password" name="password" class="gsp-input" required>
+                    </div>
+                    <button type="submit" class="gsp-admin-btn gsp-btn-save"><?php esc_html_e('Create User', 'globalswiftpay-dashboard'); ?></button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div id="gsp-edit-user-modal" class="gsp-modal" style="display: none;">
+            <div class="gsp-modal-content">
+                <span class="gsp-modal-close">&times;</span>
+                <h2><?php esc_html_e('Edit User', 'globalswiftpay-dashboard'); ?></h2>
+                <form id="gsp-edit-user-form">
+                    <input type="hidden" id="edit-user-id" name="user_id" value="">
+                    <div class="gsp-form-group">
+                        <label for="edit-username"><?php esc_html_e('Username', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="text" id="edit-username" name="username" class="gsp-input" disabled>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="edit-email"><?php esc_html_e('Email', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="email" id="edit-email" name="email" class="gsp-input" required>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="edit-display-name"><?php esc_html_e('Display Name', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="text" id="edit-display-name" name="display_name" class="gsp-input" required>
+                    </div>
+                    <div class="gsp-form-group">
+                        <label for="edit-password"><?php esc_html_e('Password (leave blank to keep)', 'globalswiftpay-dashboard'); ?></label>
+                        <input type="password" id="edit-password" name="password" class="gsp-input">
+                    </div>
+                    <button type="submit" class="gsp-admin-btn gsp-btn-save"><?php esc_html_e('Save User', 'globalswiftpay-dashboard'); ?></button>
                 </form>
             </div>
         </div>
